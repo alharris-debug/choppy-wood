@@ -1,5 +1,9 @@
 import Phaser from 'phaser';
 
+// === DEV TOGGLE - Remove before release ===
+const DEV_GOD_MODE = false; // Set to false or delete this line to disable
+// ==========================================
+
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super({ key: 'GameScene' });
@@ -31,7 +35,6 @@ export default class GameScene extends Phaser.Scene {
     this.chopWindow = { start: 0, end: 0 };
     this.chopTimer = null;
     this.landingTime = 0;
-    this.axeReady = true;
     this.lastMissTime = 0;
     this.inputLocked = false;
 
@@ -74,10 +77,6 @@ export default class GameScene extends Phaser.Scene {
       trail.setAlpha(0);
       this.axeTrail.push(trail);
     }
-
-    // Axe state
-    this.axeReady = true;
-
 
     // === UI BACKING ===
     // Soft, translucent backing for UI - fits the calm aesthetic
@@ -170,6 +169,17 @@ export default class GameScene extends Phaser.Scene {
     // Keyboard support
     this.input.keyboard.on('keydown-SPACE', () => this.handleTap());
 
+    // === DEV: Axe tier test keys (1=gold, 2=flame, 3=sapphire, 0=reset) ===
+    this.input.keyboard.on('keydown-ONE', () => { this.axe.axeTier = 0; this.makeAxeGolden(); });
+    this.input.keyboard.on('keydown-TWO', () => { this.axe.axeTier = 1; this.makeAxeFlame(); });
+    this.input.keyboard.on('keydown-THREE', () => { this.axe.axeTier = 2; this.makeAxeSapphire(); });
+    this.input.keyboard.on('keydown-ZERO', () => this.resetAxeTier());
+    // === DEV: Sky theme test keys (7=space, 8=galaxy, 9=lightspeed) ===
+    this.input.keyboard.on('keydown-SEVEN', () => { this.streak = 150; this.updateBackgroundTheme(); });
+    this.input.keyboard.on('keydown-EIGHT', () => { this.streak = 200; this.updateBackgroundTheme(); });
+    this.input.keyboard.on('keydown-NINE', () => { this.streak = 250; this.updateBackgroundTheme(); });
+    // =====================================================================
+
     // Particle emitter for wood chips
     this.createParticles();
 
@@ -186,7 +196,10 @@ export default class GameScene extends Phaser.Scene {
       sunset: { top: 0xc8a090, mid: 0xd0b8a0, bottom: 0xd8c8a8, tree: 0x4a3830, foliage: 0x6a5040, mountain: 0x807068, mountainFar: 0x989088 },
       dusk: { top: 0x4a5560, mid: 0x606a70, bottom: 0x706860, tree: 0x2a3030, foliage: 0x384040, mountain: 0x505858, mountainFar: 0x687070 },
       night: { top: 0x1a2030, mid: 0x283040, bottom: 0x303840, tree: 0x202828, foliage: 0x283030, mountain: 0x2a3238, mountainFar: 0x384048 },
-      aurora: { top: 0x1a2838, mid: 0x2a3848, bottom: 0x406058, tree: 0x203030, foliage: 0x305048, mountain: 0x2a4040, mountainFar: 0x385050 }
+      aurora: { top: 0x1a2838, mid: 0x2a3848, bottom: 0x406058, tree: 0x203030, foliage: 0x305048, mountain: 0x2a4040, mountainFar: 0x385050 },
+      space: { top: 0x0a0a18, mid: 0x101028, bottom: 0x181830, tree: 0x151520, foliage: 0x1a1a28, mountain: 0x1a1a2a, mountainFar: 0x252538 },
+      galaxy: { top: 0x0f0820, mid: 0x1a1040, bottom: 0x280a50, tree: 0x120818, foliage: 0x1a1028, mountain: 0x1a0a30, mountainFar: 0x2a1848 },
+      lightspeed: { top: 0x000008, mid: 0x000818, bottom: 0x001030, tree: 0x000510, foliage: 0x000818, mountain: 0x000a18, mountainFar: 0x001028 }
     };
     this.currentTheme = 'day';
 
@@ -322,6 +335,129 @@ export default class GameScene extends Phaser.Scene {
             yoyo: false
           });
         }
+      });
+    }
+
+    // === SPACE EFFECTS (hidden until space theme) ===
+    this.createSpaceEffects(width, height);
+  }
+
+  createSpaceEffects(width, height) {
+    // Twinkling stars
+    this.stars = [];
+    for (let i = 0; i < 50; i++) {
+      const star = this.add.circle(
+        Math.random() * width,
+        Math.random() * (height - 200),
+        Math.random() * 2 + 0.5,
+        0xffffff,
+        Math.random() * 0.8 + 0.2
+      );
+      star.setVisible(false);
+      this.stars.push(star);
+      
+      // Twinkle animation
+      this.tweens.add({
+        targets: star,
+        alpha: { from: star.alpha, to: Math.random() * 0.3 + 0.1 },
+        duration: 500 + Math.random() * 1000,
+        yoyo: true,
+        repeat: -1,
+        delay: Math.random() * 2000
+      });
+    }
+
+    // Planets (for galaxy theme)
+    this.planets = [];
+    const planetColors = [0xff6644, 0x44aaff, 0xffaa44, 0xaa66ff, 0x66ffaa];
+    for (let i = 0; i < 3; i++) {
+      const planetContainer = this.add.container(
+        100 + Math.random() * (width - 200),
+        50 + Math.random() * 150
+      );
+      
+      // Planet body
+      const size = 8 + Math.random() * 12;
+      const color = planetColors[Math.floor(Math.random() * planetColors.length)];
+      const planet = this.add.circle(0, 0, size, color);
+      
+      // Planet glow
+      const glow = this.add.circle(0, 0, size + 4, color, 0.2);
+      
+      // Ring for some planets
+      if (Math.random() > 0.5) {
+        const ring = this.add.ellipse(0, 0, size * 3, size * 0.8, color, 0.4);
+        ring.setAngle(Math.random() * 30 - 15);
+        planetContainer.add(ring);
+      }
+      
+      planetContainer.add([glow, planet]);
+      planetContainer.setVisible(false);
+      planetContainer.setScale(0.8);
+      this.planets.push(planetContainer);
+      
+      // Slow orbit drift
+      this.tweens.add({
+        targets: planetContainer,
+        x: planetContainer.x + (Math.random() * 40 - 20),
+        y: planetContainer.y + (Math.random() * 20 - 10),
+        duration: 10000 + Math.random() * 5000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
+
+    // Lightspeed streaks
+    this.lightspeedStreaks = [];
+    for (let i = 0; i < 30; i++) {
+      const streak = this.add.rectangle(
+        Math.random() * width,
+        Math.random() * height,
+        Math.random() * 100 + 50,
+        1,
+        0xffffff,
+        Math.random() * 0.6 + 0.2
+      );
+      streak.setVisible(false);
+      streak.setAngle(-15);
+      this.lightspeedStreaks.push(streak);
+    }
+  }
+
+  updateSpaceEffects(theme) {
+    const isSpace = theme === 'space' || theme === 'galaxy' || theme === 'lightspeed';
+    const isGalaxy = theme === 'galaxy' || theme === 'lightspeed';
+    const isLightspeed = theme === 'lightspeed';
+
+    // Stars visible in space+
+    this.stars.forEach(star => star.setVisible(isSpace));
+    
+    // Planets visible in galaxy+
+    this.planets.forEach(planet => planet.setVisible(isGalaxy));
+    
+    // Lightspeed streaks
+    if (isLightspeed && !this.lightspeedActive) {
+      this.lightspeedActive = true;
+      this.lightspeedStreaks.forEach((streak, i) => {
+        streak.setVisible(true);
+        // Animate streaks flying across screen
+        this.tweens.add({
+          targets: streak,
+          x: streak.x + 800,
+          duration: 200 + Math.random() * 300,
+          repeat: -1,
+          onRepeat: () => {
+            streak.x = -100;
+            streak.y = Math.random() * this.scale.height;
+          }
+        });
+      });
+    } else if (!isLightspeed && this.lightspeedActive) {
+      this.lightspeedActive = false;
+      this.lightspeedStreaks.forEach(streak => {
+        this.tweens.killTweensOf(streak);
+        streak.setVisible(false);
       });
     }
   }
@@ -512,7 +648,10 @@ export default class GameScene extends Phaser.Scene {
     const { width, height } = this.scale;
     let newTheme = 'day';
 
-    if (this.streak >= 100) newTheme = 'aurora';
+    if (this.streak >= 250) newTheme = 'lightspeed';
+    else if (this.streak >= 200) newTheme = 'galaxy';
+    else if (this.streak >= 150) newTheme = 'space';
+    else if (this.streak >= 100) newTheme = 'aurora';
     else if (this.streak >= 50) newTheme = 'night';
     else if (this.streak >= 25) newTheme = 'dusk';
     else if (this.streak >= 10) newTheme = 'sunset';
@@ -527,6 +666,9 @@ export default class GameScene extends Phaser.Scene {
 
       // Update mountains
       this.drawMountains(width, height, theme);
+
+      // Update space effects visibility
+      this.updateSpaceEffects(newTheme);
 
       // Update sun/moon
       const isNight = newTheme === 'night' || newTheme === 'aurora' || newTheme === 'dusk';
@@ -1268,7 +1410,10 @@ export default class GameScene extends Phaser.Scene {
   }
 
   startBackgroundMusic() {
+    // Check if music is already playing (persists across scene restarts)
+    if (this.bgMusic && this.bgMusic.isPlaying) return;
     if (this.musicPlaying) return;
+    
     this.bgMusic = this.sound.add('bgm', { loop: true, volume: 0.15 });
     this.bgMusic.play();
     this.musicPlaying = true;
@@ -1491,16 +1636,29 @@ export default class GameScene extends Phaser.Scene {
     this.currentLog.add(detailedLog);
     this.logState = 'dropping';
 
-    // Unlock input and reset axe now that a new log is active
+    // Unique ID for this log to prevent stale timers from affecting it
+    this.currentLogId = Date.now();
+    const logId = this.currentLogId;
+
+    // Unlock input now that a new log is active
     this.inputLocked = false;
-    this.axeReady = true;
     const targetY = height - 130;
     const choppableDelay = this.currentDropTime * 0.8;
     this.landingTime = this.time.now + this.currentDropTime;
 
     this.time.delayedCall(choppableDelay, () => {
-      if (this.logState === 'dropping') {
+      // Only change state if this timer belongs to the current log
+      if (this.logState === 'dropping' && this.currentLogId === logId) {
         this.logState = 'choppable';
+        // DEV: Auto-chop in god mode
+        if (typeof DEV_GOD_MODE !== 'undefined' && DEV_GOD_MODE) {
+          // Extra safety checks for god mode
+          if (this.currentLog && !this.inputLocked && this.logState === 'choppable') {
+            this.swingAxe();
+            this.perfectChop();
+            this.triggerParallax();
+          }
+        }
       }
     });
 
@@ -1546,13 +1704,11 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
 
-    // Hard lock on input after miss
-    if (this.inputLocked) {
-      return;
-    }
+    // Always swing axe for visual feedback on any tap
+    this.swingAxe();
 
-    // Don't allow chops if no log is active
-    if (!this.currentLog) {
+    // Hitbox checks - only register chop if conditions are met
+    if (this.inputLocked || !this.currentLog) {
       return;
     }
 
@@ -1561,21 +1717,29 @@ export default class GameScene extends Phaser.Scene {
       this.triggerParallax();
     } else if (this.logState === 'choppable' || this.logState === 'onBlock') {
       this.triggerParallax();
-      const timingOffset = now - this.landingTime;
-      const absTiming = Math.abs(timingOffset);
-      if (absTiming < 40) {
+      // DEV: God mode bypass
+      if (typeof DEV_GOD_MODE !== 'undefined' && DEV_GOD_MODE) {
         this.perfectChop();
-      } else if (absTiming < 100) {
-        this.goodChop();
       } else {
-        this.okChop();
+        const now = this.time.now;
+        const timingOffset = now - this.landingTime;
+        const absTiming = Math.abs(timingOffset);
+        if (absTiming < 40) {
+          this.perfectChop();
+        } else if (absTiming < 100) {
+          this.goodChop();
+        } else {
+          this.okChop();
+        }
       }
     }
   }
 
   swingAxe() {
-    if (!this.axeReady) return;
-    this.axeReady = false;
+    // Kill any existing axe tweens to allow responsive input
+    this.tweens.killTweensOf(this.axe);
+    this.clearAxeTrail();
+    
     this.playWhooshSound();
 
     this.tweens.add({
@@ -1592,16 +1756,10 @@ export default class GameScene extends Phaser.Scene {
           duration: 150,
           ease: 'Back.easeOut',
           onComplete: () => {
-            this.axeReady = true;
             this.clearAxeTrail();
           }
         });
       }
-    });
-
-    // Safety timeout to reset axeReady in case tween gets interrupted
-    this.time.delayedCall(350, () => {
-      this.axeReady = true;
     });
   }
 
@@ -1647,6 +1805,9 @@ export default class GameScene extends Phaser.Scene {
   perfectChop() {
     this.executeChop('PERFECT!', '#60ff60', 100, 'perfect');
 
+    // Skip axe upgrades in god mode (causes conflicts with auto-chop timing)
+    if (typeof DEV_GOD_MODE !== 'undefined' && DEV_GOD_MODE) return;
+
     if (this.streak >= 80 && this.axe.axeTier < 3) {
       this.makeAxeSapphire();
     } else if (this.streak >= 65 && this.axe.axeTier < 2) {
@@ -1683,7 +1844,8 @@ export default class GameScene extends Phaser.Scene {
   executeChop(feedbackMsg, feedbackColor, basePoints, quality) {
     if (this.chopTimer) this.chopTimer.remove();
     this.logState = 'chopped';
-    this.swingAxe();
+    this.inputLocked = true; // Lock input until next log drops
+    // swingAxe is now called in handleTap for immediate visual feedback
 
     const points = basePoints * this.multiplier;
     this.score += points;
@@ -1761,7 +1923,7 @@ export default class GameScene extends Phaser.Scene {
     this.inputLocked = true;
     this.logState = 'missed';
 
-    this.swingAxe();
+    // swingAxe is now called in handleTap for immediate visual feedback
     this.showFeedback('TOO EARLY!', '#ff6060');
     this.playMissSound();
 
@@ -1848,7 +2010,12 @@ export default class GameScene extends Phaser.Scene {
 
   updateMultiplier() {
     let newMultiplier = 1;
-    if (this.streak >= 50) newMultiplier = 5;
+    if (this.streak >= 250) newMultiplier = 10;
+    else if (this.streak >= 200) newMultiplier = 9;
+    else if (this.streak >= 150) newMultiplier = 8;
+    else if (this.streak >= 100) newMultiplier = 7;
+    else if (this.streak >= 75) newMultiplier = 6;
+    else if (this.streak >= 50) newMultiplier = 5;
     else if (this.streak >= 25) newMultiplier = 4;
     else if (this.streak >= 15) newMultiplier = 3;
     else if (this.streak >= 5) newMultiplier = 2;
@@ -1876,6 +2043,11 @@ export default class GameScene extends Phaser.Scene {
   }
 
   showFeedback(text, color) {
+    // Kill any existing feedback tweens to prevent overlap issues at high speed
+    this.tweens.killTweensOf(this.feedbackText);
+    
+    // Reset position and show new feedback
+    this.feedbackText.y = this.scale.height / 2;
     this.feedbackText.setText(text);
     this.feedbackText.setColor(color);
     this.feedbackText.setAlpha(1);
@@ -1892,8 +2064,8 @@ export default class GameScene extends Phaser.Scene {
       targets: this.feedbackText,
       alpha: 0,
       y: this.feedbackText.y - 30,
-      duration: 600,
-      delay: 400,
+      duration: 400,
+      delay: 200,
       onComplete: () => {
         this.feedbackText.y = this.scale.height / 2;
       }
