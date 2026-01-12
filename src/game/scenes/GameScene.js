@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 
-// === DEV TOGGLE - Remove before release ===
-const DEV_GOD_MODE = false; // Set to false or delete this line to disable
-// ==========================================
+// === DEV TOGGLES - Set to false before release ===
+const DEV_GOD_MODE = false;
+const DEV_HOTKEYS = false; // Axe tier keys (1-3, 0) and sky theme keys (7-9)
+// =================================================
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -169,16 +170,19 @@ export default class GameScene extends Phaser.Scene {
     // Keyboard support
     this.input.keyboard.on('keydown-SPACE', () => this.handleTap());
 
-    // === DEV: Axe tier test keys (1=gold, 2=flame, 3=sapphire, 0=reset) ===
-    this.input.keyboard.on('keydown-ONE', () => { this.axe.axeTier = 0; this.makeAxeGolden(); });
-    this.input.keyboard.on('keydown-TWO', () => { this.axe.axeTier = 1; this.makeAxeFlame(); });
-    this.input.keyboard.on('keydown-THREE', () => { this.axe.axeTier = 2; this.makeAxeSapphire(); });
-    this.input.keyboard.on('keydown-ZERO', () => this.resetAxeTier());
-    // === DEV: Sky theme test keys (7=space, 8=galaxy, 9=lightspeed) ===
-    this.input.keyboard.on('keydown-SEVEN', () => { this.streak = 150; this.updateBackgroundTheme(); });
-    this.input.keyboard.on('keydown-EIGHT', () => { this.streak = 200; this.updateBackgroundTheme(); });
-    this.input.keyboard.on('keydown-NINE', () => { this.streak = 250; this.updateBackgroundTheme(); });
-    // =====================================================================
+    // === DEV: Test hotkeys (enable with DEV_HOTKEYS = true) ===
+    if (DEV_HOTKEYS) {
+      // Axe tier keys: 1=gold, 2=flame, 3=sapphire, 0=reset
+      this.input.keyboard.on('keydown-ONE', () => { this.axe.axeTier = 0; this.makeAxeGolden(); });
+      this.input.keyboard.on('keydown-TWO', () => { this.axe.axeTier = 1; this.makeAxeFlame(); });
+      this.input.keyboard.on('keydown-THREE', () => { this.axe.axeTier = 2; this.makeAxeSapphire(); });
+      this.input.keyboard.on('keydown-ZERO', () => this.resetAxeTier());
+      // Sky theme keys: 7=space, 8=galaxy, 9=lightspeed
+      this.input.keyboard.on('keydown-SEVEN', () => { this.streak = 150; this.updateBackgroundTheme(); });
+      this.input.keyboard.on('keydown-EIGHT', () => { this.streak = 200; this.updateBackgroundTheme(); });
+      this.input.keyboard.on('keydown-NINE', () => { this.streak = 250; this.updateBackgroundTheme(); });
+    }
+    // ==========================================================
 
     // Particle emitter for wood chips
     this.createParticles();
@@ -1121,12 +1125,18 @@ export default class GameScene extends Phaser.Scene {
   makeAxeGolden() {
     if (!this.axe || this.axe.axeTier >= 1) return;
     this.axe.axeTier = 1;
-    this.axe.axeGraphics.setTint(0xffdd44); // Bright gold
-    this.sparks.emitParticleAt(this.axe.x - 20, this.axe.y - 40, 20);
-    // Flash effect
+    this.redrawAxeGraphics(1);
+
+    // Effects
+    this.playUpgradeSound(1);
+    this.shakeScreen(4, 150);
+    this.showUpgradeFlash(0xffd700, this.axe.x - 25, this.axe.y - 50);
+    this.sparks.emitParticleAt(this.axe.x - 20, this.axe.y - 40, 30);
+
+    // Flash effect with size increase (7% bigger)
     this.tweens.add({
       targets: this.axe,
-      scale: { from: 2.0, to: 1.6 },
+      scale: { from: 2.0, to: 1.712 },
       duration: 300,
       ease: 'Back.easeOut'
     });
@@ -1136,11 +1146,18 @@ export default class GameScene extends Phaser.Scene {
   makeAxeFlame() {
     if (!this.axe || this.axe.axeTier >= 2) return;
     this.axe.axeTier = 2;
-    this.axe.axeGraphics.setTint(0xff4422); // Bright flame red
-    this.sparks.emitParticleAt(this.axe.x - 20, this.axe.y - 40, 25);
+    this.redrawAxeGraphics(2);
+
+    // Effects - more intense
+    this.playUpgradeSound(2);
+    this.shakeScreen(6, 200);
+    this.showUpgradeFlash(0xff4422, this.axe.x - 25, this.axe.y - 50);
+    this.sparks.emitParticleAt(this.axe.x - 20, this.axe.y - 40, 40);
+
+    // Flash effect with size increase (14% bigger than base)
     this.tweens.add({
       targets: this.axe,
-      scale: { from: 2.0, to: 1.6 },
+      scale: { from: 2.1, to: 1.824 },
       duration: 300,
       ease: 'Back.easeOut'
     });
@@ -1150,11 +1167,18 @@ export default class GameScene extends Phaser.Scene {
   makeAxeSapphire() {
     if (!this.axe || this.axe.axeTier >= 3) return;
     this.axe.axeTier = 3;
-    this.axe.axeGraphics.setTint(0x4488ff); // Bright sapphire blue
-    this.sparks.emitParticleAt(this.axe.x - 20, this.axe.y - 40, 30);
+    this.redrawAxeGraphics(3);
+
+    // Effects - most intense
+    this.playUpgradeSound(3);
+    this.shakeScreen(8, 250);
+    this.showUpgradeFlash(0x4488ff, this.axe.x - 25, this.axe.y - 50);
+    this.sparks.emitParticleAt(this.axe.x - 20, this.axe.y - 40, 50);
+
+    // Flash effect with size increase (21% bigger than base)
     this.tweens.add({
       targets: this.axe,
-      scale: { from: 2.0, to: 1.6 },
+      scale: { from: 2.2, to: 1.936 },
       duration: 300,
       ease: 'Back.easeOut'
     });
@@ -1164,7 +1188,157 @@ export default class GameScene extends Phaser.Scene {
   resetAxeTier() {
     if (!this.axe) return;
     this.axe.axeTier = 0;
-    this.axe.axeGraphics.clearTint();
+    this.redrawAxeGraphics(0);
+    this.axe.setScale(1.6); // Reset to base size
+  }
+
+  redrawAxeGraphics(tier) {
+    if (!this.axe || !this.axe.axeGraphics) return;
+
+    const g = this.axe.axeGraphics;
+    g.clear();
+
+    // Color palettes for each tier
+    const palettes = {
+      0: { // Normal - gray metal
+        handleShadow: 0x3d2010, handleBase: 0x6b4423, handleGrain1: 0x8b5a2b, handleGrain2: 0x7a4a1b,
+        handleWrap: 0x4a3728, handleWrapLine: 0x3a2718, handleCap: 0x5a4020,
+        collar1: 0x555555, collar2: 0x666666,
+        bladeBack: 0x4a4a4a, bladeMain: 0x707070, bladeEdge: 0xa8a8a8,
+        bladeHighlight: 0xcccccc, edgeGlint: 0xeeeeee, bladeShadow: 0x3a3a3a,
+        notch1: 0x555555, notch2: 0x666666
+      },
+      1: { // Golden
+        handleShadow: 0x4a3010, handleBase: 0x7a5020, handleGrain1: 0x9a6830, handleGrain2: 0x8a5820,
+        handleWrap: 0x6a4020, handleWrapLine: 0x5a3010, handleCap: 0x7a5020,
+        collar1: 0x8b7000, collar2: 0xa08000,
+        bladeBack: 0xb8860b, bladeMain: 0xdaa520, bladeEdge: 0xffd700,
+        bladeHighlight: 0xffec8b, edgeGlint: 0xfffacd, bladeShadow: 0x8b6914,
+        notch1: 0xb8860b, notch2: 0xcd9b1d
+      },
+      2: { // Flame
+        handleShadow: 0x3d1010, handleBase: 0x5a2020, handleGrain1: 0x7a3030, handleGrain2: 0x6a2525,
+        handleWrap: 0x4a1818, handleWrapLine: 0x3a1010, handleCap: 0x5a2020,
+        collar1: 0x8b2500, collar2: 0xa03000,
+        bladeBack: 0x8b0000, bladeMain: 0xcc3300, bladeEdge: 0xff4500,
+        bladeHighlight: 0xff6347, edgeGlint: 0xff7f50, bladeShadow: 0x660000,
+        notch1: 0x8b0000, notch2: 0xb22222
+      },
+      3: { // Sapphire
+        handleShadow: 0x102040, handleBase: 0x203050, handleGrain1: 0x304060, handleGrain2: 0x283858,
+        handleWrap: 0x182848, handleWrapLine: 0x102038, handleCap: 0x203050,
+        collar1: 0x1e4080, collar2: 0x2850a0,
+        bladeBack: 0x0047ab, bladeMain: 0x4169e1, bladeEdge: 0x6495ed,
+        bladeHighlight: 0x87ceeb, edgeGlint: 0xb0e0e6, bladeShadow: 0x00008b,
+        notch1: 0x0047ab, notch2: 0x4682b4
+      }
+    };
+
+    const p = palettes[tier] || palettes[0];
+
+    // === HANDLE ===
+    g.fillStyle(p.handleShadow);
+    g.fillRoundedRect(-4, -5, 14, 95, 3);
+    g.fillStyle(p.handleBase);
+    g.fillRoundedRect(-5, -8, 12, 90, 2);
+    g.fillStyle(p.handleGrain1);
+    g.fillRoundedRect(-3, -6, 3, 85, 1);
+    g.fillStyle(p.handleGrain2);
+    g.fillRoundedRect(2, -4, 2, 82, 1);
+    g.fillStyle(p.handleWrap);
+    g.fillRect(-6, 60, 14, 20);
+    g.lineStyle(2, p.handleWrapLine);
+    for (let wy = 62; wy < 78; wy += 4) {
+      g.beginPath();
+      g.moveTo(-6, wy);
+      g.lineTo(8, wy);
+      g.strokePath();
+    }
+    g.fillStyle(p.handleCap);
+    g.fillRoundedRect(-6, 78, 14, 6, 2);
+
+    // === AXE HEAD ===
+    g.fillStyle(p.collar1);
+    g.fillRect(-8, -12, 18, 16);
+    g.fillStyle(p.collar2);
+    g.fillRect(-6, -10, 14, 12);
+
+    // Blade back
+    g.fillStyle(p.bladeBack);
+    g.beginPath();
+    g.moveTo(-8, -10);
+    g.lineTo(-25, -18);
+    g.lineTo(-42, -12);
+    g.lineTo(-50, 5);
+    g.lineTo(-42, 22);
+    g.lineTo(-20, 18);
+    g.lineTo(-8, 8);
+    g.closePath();
+    g.fillPath();
+
+    // Blade main body
+    g.fillStyle(p.bladeMain);
+    g.beginPath();
+    g.moveTo(-8, -8);
+    g.lineTo(-24, -15);
+    g.lineTo(-40, -10);
+    g.lineTo(-47, 5);
+    g.lineTo(-40, 19);
+    g.lineTo(-20, 15);
+    g.lineTo(-8, 6);
+    g.closePath();
+    g.fillPath();
+
+    // Curved cutting edge
+    g.fillStyle(p.bladeEdge);
+    g.beginPath();
+    g.moveTo(-40, -10);
+    g.lineTo(-47, 5);
+    g.lineTo(-40, 19);
+    g.lineTo(-52, 5);
+    g.closePath();
+    g.fillPath();
+
+    // Blade highlight
+    g.fillStyle(p.bladeHighlight, 0.4);
+    g.beginPath();
+    g.moveTo(-12, -6);
+    g.lineTo(-28, -13);
+    g.lineTo(-42, -8);
+    g.lineTo(-46, 0);
+    g.lineTo(-40, -5);
+    g.lineTo(-25, -8);
+    g.lineTo(-12, -3);
+    g.closePath();
+    g.fillPath();
+
+    // Edge glint
+    g.lineStyle(2, p.edgeGlint, 0.6);
+    g.beginPath();
+    g.moveTo(-48, -4);
+    g.lineTo(-50, 5);
+    g.lineTo(-48, 14);
+    g.strokePath();
+
+    // Blade shadow
+    g.fillStyle(p.bladeShadow);
+    g.beginPath();
+    g.moveTo(-8, 6);
+    g.lineTo(-20, 15);
+    g.lineTo(-40, 19);
+    g.lineTo(-38, 16);
+    g.lineTo(-20, 12);
+    g.lineTo(-8, 4);
+    g.closePath();
+    g.fillPath();
+
+    // Decorative notch
+    g.fillStyle(p.notch1);
+    g.fillCircle(-25, 0, 3);
+    g.fillStyle(p.notch2);
+    g.fillCircle(-25, 0, 2);
+
+    g.y = -84;
   }
 
   createParticles() {
@@ -1542,6 +1716,120 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
+  playUpgradeSound(tier) {
+    if (!this.soundEnabled || !this.audioContext) return;
+    const ctx = this.audioContext;
+    const now = ctx.currentTime;
+
+    // Different sounds for each tier
+    const tierSounds = {
+      1: { // Golden - rising chime
+        notes: [523, 659, 784, 1047], // C5, E5, G5, C6
+        type: 'sine',
+        duration: 0.15,
+        delay: 0.06
+      },
+      2: { // Flame - powerful chord with rumble
+        notes: [392, 494, 587, 784], // G4, B4, D5, G5
+        type: 'sawtooth',
+        duration: 0.2,
+        delay: 0.04
+      },
+      3: { // Sapphire - crystalline shimmer
+        notes: [880, 1109, 1319, 1760], // A5, C#6, E6, A6
+        type: 'sine',
+        duration: 0.25,
+        delay: 0.05
+      }
+    };
+
+    const sound = tierSounds[tier] || tierSounds[1];
+
+    // Play ascending notes
+    sound.notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = sound.type;
+      osc.frequency.value = freq;
+
+      const startTime = now + i * sound.delay;
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.25, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + sound.duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + sound.duration);
+    });
+
+    // Add a shimmer/sparkle effect
+    const shimmerCount = tier + 2;
+    for (let i = 0; i < shimmerCount; i++) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 2000 + Math.random() * 2000;
+
+      const startTime = now + Math.random() * 0.3;
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.08, startTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.1);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + 0.1);
+    }
+  }
+
+  shakeScreen(intensity = 5, duration = 200) {
+    const camera = this.cameras.main;
+    camera.shake(duration, intensity / 1000);
+  }
+
+  showUpgradeFlash(color, x, y) {
+    // Create radial glow flash
+    const flash = this.add.graphics();
+    flash.setDepth(150);
+
+    // Draw expanding rings
+    const rings = [];
+    for (let i = 0; i < 3; i++) {
+      const ring = this.add.graphics();
+      ring.setDepth(150);
+      ring.lineStyle(4 - i, color, 0.8 - i * 0.2);
+      ring.strokeCircle(x, y, 20);
+      rings.push(ring);
+
+      // Animate each ring expanding outward
+      this.tweens.add({
+        targets: ring,
+        scaleX: 3 + i,
+        scaleY: 3 + i,
+        alpha: 0,
+        duration: 400 + i * 100,
+        delay: i * 50,
+        ease: 'Cubic.easeOut',
+        onComplete: () => ring.destroy()
+      });
+    }
+
+    // Central flash
+    flash.fillStyle(color, 0.6);
+    flash.fillCircle(x, y, 30);
+
+    this.tweens.add({
+      targets: flash,
+      alpha: 0,
+      scaleX: 2,
+      scaleY: 2,
+      duration: 300,
+      ease: 'Cubic.easeOut',
+      onComplete: () => flash.destroy()
+    });
+  }
+
   updateStreakDisplay() {
     this.streakText.setText('Streak: ' + this.streak);
     if (this.streak >= 5) {
@@ -1724,9 +2012,15 @@ export default class GameScene extends Phaser.Scene {
         const now = this.time.now;
         const timingOffset = now - this.landingTime;
         const absTiming = Math.abs(timingOffset);
-        if (absTiming < 40) {
+
+        // Axe tier bonus: 5% larger timing window per tier
+        const tierBonus = 1 + (this.axe.axeTier * 0.05);
+        const perfectWindow = 40 * tierBonus;
+        const goodWindow = 100 * tierBonus;
+
+        if (absTiming < perfectWindow) {
           this.perfectChop();
-        } else if (absTiming < 100) {
+        } else if (absTiming < goodWindow) {
           this.goodChop();
         } else {
           this.okChop();
