@@ -43,6 +43,9 @@ export default class GameScene extends Phaser.Scene {
     this.axe = null;
     this.hearts = [];
     this.axeTrail = [];
+
+    // Axe head style - locked to Simple Hatchet (style 1)
+    this.axeHeadStyle = 1;
   }
 
   preload() {
@@ -111,8 +114,8 @@ export default class GameScene extends Phaser.Scene {
       strokeThickness: 2
     }).setOrigin(1, 0).setDepth(200);
 
-    // Streak container with flame effect - softer styling
-    this.streakContainer = this.add.container(20, 55);
+    // Streak container with flame effect - centered in left panel (panel: x=8, w=190, center=103)
+    this.streakContainer = this.add.container(103, 68);
     this.streakContainer.setDepth(200);
     this.streakText = this.add.text(0, 0, 'Streak: 0', {
       fontSize: '20px',
@@ -120,7 +123,7 @@ export default class GameScene extends Phaser.Scene {
       color: '#e8d080',
       stroke: '#1a1a1a',
       strokeThickness: 2
-    });
+    }).setOrigin(0.5, 0.5);
     this.streakContainer.add(this.streakText);
 
     // Streak flame particles (hidden initially)
@@ -139,9 +142,9 @@ export default class GameScene extends Phaser.Scene {
     }).setOrigin(1, 0);
     this.multiplierContainer.add([this.multiplierGlow, this.multiplierText]);
 
-    // Lives display (hearts) - top left under score
-    this.heartsContainer = this.add.container(36, 95);
-    this.heartsContainer.setScale(2);
+    // Lives display (logs) - centered in left panel (panel: x=8, w=190, center=103)
+    this.heartsContainer = this.add.container(103, 105);
+    this.heartsContainer.setScale(1.8);
     this.heartsContainer.setDepth(200);
     this.hearts = [];
     this.createHeartsDisplay();
@@ -183,6 +186,10 @@ export default class GameScene extends Phaser.Scene {
       this.input.keyboard.on('keydown-NINE', () => { this.streak = 250; this.updateBackgroundTheme(); });
     }
     // ==========================================================
+
+    // === DESIGN MODE: Cycle axe head styles (disabled - locked to Hatchet) ===
+    // this.input.keyboard.on('keydown-A', () => this.cycleAxeHeadStyle());
+    // =========================================================
 
     // Particle emitter for wood chips
     this.createParticles();
@@ -995,129 +1002,15 @@ export default class GameScene extends Phaser.Scene {
     const axeGroup = this.add.container(x, y);
     const g = this.add.graphics();
 
-    // === HANDLE ===
-    // Handle shadow
-    g.fillStyle(0x3d2010);
-    g.fillRoundedRect(-4, -5, 14, 95, 3);
-
-    // Handle base wood
-    g.fillStyle(0x6b4423);
-    g.fillRoundedRect(-5, -8, 12, 90, 2);
-
-    // Handle wood grain (lighter streaks)
-    g.fillStyle(0x8b5a2b);
-    g.fillRoundedRect(-3, -6, 3, 85, 1);
-    g.fillStyle(0x7a4a1b);
-    g.fillRoundedRect(2, -4, 2, 82, 1);
-
-    // Handle wrap/grip at bottom
-    g.fillStyle(0x4a3728);
-    g.fillRect(-6, 60, 14, 20);
-    // Wrap lines
-    g.lineStyle(2, 0x3a2718);
-    for (let wy = 62; wy < 78; wy += 4) {
-      g.beginPath();
-      g.moveTo(-6, wy);
-      g.lineTo(8, wy);
-      g.strokePath();
-    }
-
-    // Handle end cap
-    g.fillStyle(0x5a4020);
-    g.fillRoundedRect(-6, 78, 14, 6, 2);
-
-    // === AXE HEAD - NORDIC/BEARDED STYLE ===
-    // Metal collar (where blade meets handle)
-    g.fillStyle(0x555555);
-    g.fillRect(-8, -12, 18, 16);
-    g.fillStyle(0x666666);
-    g.fillRect(-6, -10, 14, 12);
-
-    // Nordic axe - curved blade with beard extending down
-    // Blade back (darker metal)
-    g.fillStyle(0x4a4a4a);
-    g.beginPath();
-    g.moveTo(-8, -10);
-    g.lineTo(-25, -18);  // Top curves up
-    g.lineTo(-42, -12);  // Top edge
-    g.lineTo(-50, 5);    // Curved cutting edge
-    g.lineTo(-42, 22);   // Beard extends down
-    g.lineTo(-20, 18);   // Beard curves back
-    g.lineTo(-8, 8);     // Back to handle
-    g.closePath();
-    g.fillPath();
-
-    // Blade main body
-    g.fillStyle(0x707070);
-    g.beginPath();
-    g.moveTo(-8, -8);
-    g.lineTo(-24, -15);
-    g.lineTo(-40, -10);
-    g.lineTo(-47, 5);
-    g.lineTo(-40, 19);
-    g.lineTo(-20, 15);
-    g.lineTo(-8, 6);
-    g.closePath();
-    g.fillPath();
-
-    // Curved cutting edge (lighter)
-    g.fillStyle(0xa8a8a8);
-    g.beginPath();
-    g.moveTo(-40, -10);
-    g.lineTo(-47, 5);
-    g.lineTo(-40, 19);
-    g.lineTo(-52, 5);    // Sharp edge point
-    g.closePath();
-    g.fillPath();
-
-    // Blade highlight (metallic shine)
-    g.fillStyle(0xcccccc, 0.4);
-    g.beginPath();
-    g.moveTo(-12, -6);
-    g.lineTo(-28, -13);
-    g.lineTo(-42, -8);
-    g.lineTo(-46, 0);
-    g.lineTo(-40, -5);
-    g.lineTo(-25, -8);
-    g.lineTo(-12, -3);
-    g.closePath();
-    g.fillPath();
-
-    // Edge glint - curved
-    g.lineStyle(2, 0xeeeeee, 0.6);
-    g.beginPath();
-    g.moveTo(-48, -4);
-    g.lineTo(-50, 5);
-    g.lineTo(-48, 14);
-    g.strokePath();
-
-    // Blade shadow on beard
-    g.fillStyle(0x3a3a3a);
-    g.beginPath();
-    g.moveTo(-8, 6);
-    g.lineTo(-20, 15);
-    g.lineTo(-40, 19);
-    g.lineTo(-38, 16);
-    g.lineTo(-20, 12);
-    g.lineTo(-8, 4);
-    g.closePath();
-    g.fillPath();
-
-    // Decorative notch on blade
-    g.fillStyle(0x555555);
-    g.fillCircle(-25, 0, 3);
-    g.fillStyle(0x666666);
-    g.fillCircle(-25, 0, 2);
-
-    // Offset graphics so pivot point is at handle bottom
-    // Handle bottom is at y=84, so shift up by -84
-    g.y = -84;
-
     axeGroup.add(g);
-    
-    // Store graphics reference for golden axe effect
+
+    // Store graphics reference for tier effects
     axeGroup.axeGraphics = g;
     axeGroup.axeTier = 0; // 0=normal, 1=gold, 2=flame, 3=sapphire
+
+    // Draw initial axe using the modular system
+    this.axe = axeGroup; // Temporarily set so redraw works
+    this.redrawAxeGraphics(0);
 
     return axeGroup;
   }
@@ -1192,13 +1085,14 @@ export default class GameScene extends Phaser.Scene {
     this.axe.setScale(1.6); // Reset to base size
   }
 
-  redrawAxeGraphics(tier) {
-    if (!this.axe || !this.axe.axeGraphics) return;
+  cycleAxeHeadStyle() {
+    const styleNames = ['Nordic Bearded', 'Simple Hatchet', 'Broad Axe', 'Double-Bit', 'War Axe'];
+    this.axeHeadStyle = (this.axeHeadStyle + 1) % 5;
+    this.redrawAxeGraphics(this.axe.axeTier);
+    this.showFeedback(`Style ${this.axeHeadStyle}: ${styleNames[this.axeHeadStyle]}`, '#ffffff');
+  }
 
-    const g = this.axe.axeGraphics;
-    g.clear();
-
-    // Color palettes for each tier
+  getColorPalette(tier) {
     const palettes = {
       0: { // Normal - gray metal
         handleShadow: 0x3d2010, handleBase: 0x6b4423, handleGrain1: 0x8b5a2b, handleGrain2: 0x7a4a1b,
@@ -1233,10 +1127,10 @@ export default class GameScene extends Phaser.Scene {
         notch1: 0x0047ab, notch2: 0x4682b4
       }
     };
+    return palettes[tier] || palettes[0];
+  }
 
-    const p = palettes[tier] || palettes[0];
-
-    // === HANDLE ===
+  drawAxeHandle(g, p) {
     g.fillStyle(p.handleShadow);
     g.fillRoundedRect(-4, -5, 14, 95, 3);
     g.fillStyle(p.handleBase);
@@ -1256,14 +1150,15 @@ export default class GameScene extends Phaser.Scene {
     }
     g.fillStyle(p.handleCap);
     g.fillRoundedRect(-6, 78, 14, 6, 2);
+  }
 
-    // === AXE HEAD ===
+  drawAxeHead_Nordic(g, p) {
+    // Style 0: Nordic/Bearded - curved blade with beard extending down
     g.fillStyle(p.collar1);
     g.fillRect(-8, -12, 18, 16);
     g.fillStyle(p.collar2);
     g.fillRect(-6, -10, 14, 12);
 
-    // Blade back
     g.fillStyle(p.bladeBack);
     g.beginPath();
     g.moveTo(-8, -10);
@@ -1276,7 +1171,6 @@ export default class GameScene extends Phaser.Scene {
     g.closePath();
     g.fillPath();
 
-    // Blade main body
     g.fillStyle(p.bladeMain);
     g.beginPath();
     g.moveTo(-8, -8);
@@ -1289,7 +1183,6 @@ export default class GameScene extends Phaser.Scene {
     g.closePath();
     g.fillPath();
 
-    // Curved cutting edge
     g.fillStyle(p.bladeEdge);
     g.beginPath();
     g.moveTo(-40, -10);
@@ -1299,7 +1192,6 @@ export default class GameScene extends Phaser.Scene {
     g.closePath();
     g.fillPath();
 
-    // Blade highlight
     g.fillStyle(p.bladeHighlight, 0.4);
     g.beginPath();
     g.moveTo(-12, -6);
@@ -1312,7 +1204,6 @@ export default class GameScene extends Phaser.Scene {
     g.closePath();
     g.fillPath();
 
-    // Edge glint
     g.lineStyle(2, p.edgeGlint, 0.6);
     g.beginPath();
     g.moveTo(-48, -4);
@@ -1320,23 +1211,325 @@ export default class GameScene extends Phaser.Scene {
     g.lineTo(-48, 14);
     g.strokePath();
 
-    // Blade shadow
-    g.fillStyle(p.bladeShadow);
-    g.beginPath();
-    g.moveTo(-8, 6);
-    g.lineTo(-20, 15);
-    g.lineTo(-40, 19);
-    g.lineTo(-38, 16);
-    g.lineTo(-20, 12);
-    g.lineTo(-8, 4);
-    g.closePath();
-    g.fillPath();
-
-    // Decorative notch
     g.fillStyle(p.notch1);
     g.fillCircle(-25, 0, 3);
     g.fillStyle(p.notch2);
     g.fillCircle(-25, 0, 2);
+  }
+
+  drawAxeHead_Hatchet(g, p) {
+    // Style 1: Simple Hatchet - compact triangular head
+    g.fillStyle(p.collar1);
+    g.fillRect(-7, -10, 16, 14);
+    g.fillStyle(p.collar2);
+    g.fillRect(-5, -8, 12, 10);
+
+    // Simple wedge shape
+    g.fillStyle(p.bladeBack);
+    g.beginPath();
+    g.moveTo(-7, -12);
+    g.lineTo(-35, -20);
+    g.lineTo(-45, 0);
+    g.lineTo(-35, 20);
+    g.lineTo(-7, 12);
+    g.closePath();
+    g.fillPath();
+
+    g.fillStyle(p.bladeMain);
+    g.beginPath();
+    g.moveTo(-7, -10);
+    g.lineTo(-32, -17);
+    g.lineTo(-42, 0);
+    g.lineTo(-32, 17);
+    g.lineTo(-7, 10);
+    g.closePath();
+    g.fillPath();
+
+    // Sharp edge
+    g.fillStyle(p.bladeEdge);
+    g.beginPath();
+    g.moveTo(-38, -14);
+    g.lineTo(-48, 0);
+    g.lineTo(-38, 14);
+    g.lineTo(-42, 0);
+    g.closePath();
+    g.fillPath();
+
+    // Highlight
+    g.fillStyle(p.bladeHighlight, 0.5);
+    g.beginPath();
+    g.moveTo(-10, -8);
+    g.lineTo(-30, -14);
+    g.lineTo(-38, -5);
+    g.lineTo(-35, 0);
+    g.lineTo(-25, -5);
+    g.lineTo(-10, -4);
+    g.closePath();
+    g.fillPath();
+
+    g.lineStyle(2, p.edgeGlint, 0.7);
+    g.beginPath();
+    g.moveTo(-44, -8);
+    g.lineTo(-48, 0);
+    g.lineTo(-44, 8);
+    g.strokePath();
+  }
+
+  drawAxeHead_Broad(g, p) {
+    // Style 2: Broad Axe - wide flat blade for felling
+    g.fillStyle(p.collar1);
+    g.fillRect(-8, -8, 18, 12);
+    g.fillStyle(p.collar2);
+    g.fillRect(-6, -6, 14, 8);
+
+    // Wide rectangular-ish blade
+    g.fillStyle(p.bladeBack);
+    g.beginPath();
+    g.moveTo(-8, -15);
+    g.lineTo(-50, -25);
+    g.lineTo(-55, 0);
+    g.lineTo(-50, 25);
+    g.lineTo(-8, 15);
+    g.closePath();
+    g.fillPath();
+
+    g.fillStyle(p.bladeMain);
+    g.beginPath();
+    g.moveTo(-8, -12);
+    g.lineTo(-46, -22);
+    g.lineTo(-52, 0);
+    g.lineTo(-46, 22);
+    g.lineTo(-8, 12);
+    g.closePath();
+    g.fillPath();
+
+    // Curved cutting edge
+    g.fillStyle(p.bladeEdge);
+    g.beginPath();
+    g.moveTo(-48, -20);
+    g.lineTo(-58, 0);
+    g.lineTo(-48, 20);
+    g.lineTo(-52, 0);
+    g.closePath();
+    g.fillPath();
+
+    // Top highlight
+    g.fillStyle(p.bladeHighlight, 0.4);
+    g.beginPath();
+    g.moveTo(-10, -10);
+    g.lineTo(-44, -19);
+    g.lineTo(-50, -10);
+    g.lineTo(-48, 0);
+    g.lineTo(-40, -8);
+    g.lineTo(-10, -5);
+    g.closePath();
+    g.fillPath();
+
+    g.lineStyle(3, p.edgeGlint, 0.6);
+    g.beginPath();
+    g.moveTo(-54, -12);
+    g.lineTo(-58, 0);
+    g.lineTo(-54, 12);
+    g.strokePath();
+
+    // Decorative line
+    g.lineStyle(2, p.bladeShadow);
+    g.beginPath();
+    g.moveTo(-20, -10);
+    g.lineTo(-20, 10);
+    g.strokePath();
+  }
+
+  drawAxeHead_DoubleBit(g, p) {
+    // Style 3: Double-Bit - blades on both sides
+    g.fillStyle(p.collar1);
+    g.fillRect(-6, -6, 14, 12);
+    g.fillStyle(p.collar2);
+    g.fillRect(-4, -4, 10, 8);
+
+    // Left blade
+    g.fillStyle(p.bladeBack);
+    g.beginPath();
+    g.moveTo(-6, -10);
+    g.lineTo(-35, -18);
+    g.lineTo(-45, 0);
+    g.lineTo(-35, 18);
+    g.lineTo(-6, 10);
+    g.closePath();
+    g.fillPath();
+
+    g.fillStyle(p.bladeMain);
+    g.beginPath();
+    g.moveTo(-6, -8);
+    g.lineTo(-32, -15);
+    g.lineTo(-42, 0);
+    g.lineTo(-32, 15);
+    g.lineTo(-6, 8);
+    g.closePath();
+    g.fillPath();
+
+    g.fillStyle(p.bladeEdge);
+    g.beginPath();
+    g.moveTo(-38, -12);
+    g.lineTo(-48, 0);
+    g.lineTo(-38, 12);
+    g.lineTo(-42, 0);
+    g.closePath();
+    g.fillPath();
+
+    // Right blade (mirror)
+    g.fillStyle(p.bladeBack);
+    g.beginPath();
+    g.moveTo(8, -10);
+    g.lineTo(35, -18);
+    g.lineTo(45, 0);
+    g.lineTo(35, 18);
+    g.lineTo(8, 10);
+    g.closePath();
+    g.fillPath();
+
+    g.fillStyle(p.bladeMain);
+    g.beginPath();
+    g.moveTo(8, -8);
+    g.lineTo(32, -15);
+    g.lineTo(42, 0);
+    g.lineTo(32, 15);
+    g.lineTo(8, 8);
+    g.closePath();
+    g.fillPath();
+
+    g.fillStyle(p.bladeEdge);
+    g.beginPath();
+    g.moveTo(38, -12);
+    g.lineTo(48, 0);
+    g.lineTo(38, 12);
+    g.lineTo(42, 0);
+    g.closePath();
+    g.fillPath();
+
+    // Highlights
+    g.fillStyle(p.bladeHighlight, 0.4);
+    g.beginPath();
+    g.moveTo(-8, -6);
+    g.lineTo(-30, -12);
+    g.lineTo(-38, -4);
+    g.lineTo(-30, -6);
+    g.lineTo(-8, -3);
+    g.closePath();
+    g.fillPath();
+
+    g.lineStyle(2, p.edgeGlint, 0.6);
+    g.beginPath();
+    g.moveTo(-44, -6);
+    g.lineTo(-48, 0);
+    g.lineTo(-44, 6);
+    g.strokePath();
+    g.beginPath();
+    g.moveTo(44, -6);
+    g.lineTo(48, 0);
+    g.lineTo(44, 6);
+    g.strokePath();
+  }
+
+  drawAxeHead_War(g, p) {
+    // Style 4: War Axe - aggressive angular design
+    g.fillStyle(p.collar1);
+    g.fillRect(-8, -10, 18, 16);
+    g.fillStyle(p.collar2);
+    g.fillRect(-6, -8, 14, 12);
+
+    // Aggressive angular blade
+    g.fillStyle(p.bladeBack);
+    g.beginPath();
+    g.moveTo(-8, -12);
+    g.lineTo(-20, -28);  // Upper spike
+    g.lineTo(-45, -15);
+    g.lineTo(-55, 5);    // Main edge
+    g.lineTo(-45, 25);
+    g.lineTo(-15, 22);   // Lower hook
+    g.lineTo(-8, 10);
+    g.closePath();
+    g.fillPath();
+
+    g.fillStyle(p.bladeMain);
+    g.beginPath();
+    g.moveTo(-8, -10);
+    g.lineTo(-18, -24);
+    g.lineTo(-42, -12);
+    g.lineTo(-50, 5);
+    g.lineTo(-42, 22);
+    g.lineTo(-14, 19);
+    g.lineTo(-8, 8);
+    g.closePath();
+    g.fillPath();
+
+    // Sharp edge with hook
+    g.fillStyle(p.bladeEdge);
+    g.beginPath();
+    g.moveTo(-45, -12);
+    g.lineTo(-55, 5);
+    g.lineTo(-45, 22);
+    g.lineTo(-50, 5);
+    g.closePath();
+    g.fillPath();
+
+    // Upper spike edge
+    g.fillStyle(p.bladeEdge);
+    g.beginPath();
+    g.moveTo(-18, -24);
+    g.lineTo(-22, -30);
+    g.lineTo(-42, -14);
+    g.lineTo(-42, -12);
+    g.closePath();
+    g.fillPath();
+
+    // Highlight
+    g.fillStyle(p.bladeHighlight, 0.4);
+    g.beginPath();
+    g.moveTo(-10, -8);
+    g.lineTo(-16, -20);
+    g.lineTo(-40, -10);
+    g.lineTo(-48, 0);
+    g.lineTo(-40, -5);
+    g.lineTo(-20, -10);
+    g.lineTo(-10, -5);
+    g.closePath();
+    g.fillPath();
+
+    g.lineStyle(2, p.edgeGlint, 0.6);
+    g.beginPath();
+    g.moveTo(-50, -8);
+    g.lineTo(-55, 5);
+    g.lineTo(-50, 18);
+    g.strokePath();
+
+    // Decorative rivet
+    g.fillStyle(p.notch1);
+    g.fillCircle(-25, 2, 4);
+    g.fillStyle(p.notch2);
+    g.fillCircle(-25, 2, 2);
+  }
+
+  redrawAxeGraphics(tier) {
+    if (!this.axe || !this.axe.axeGraphics) return;
+
+    const g = this.axe.axeGraphics;
+    g.clear();
+
+    const p = this.getColorPalette(tier);
+
+    // Draw handle (same for all styles)
+    this.drawAxeHandle(g, p);
+
+    // Draw axe head based on current style
+    switch (this.axeHeadStyle) {
+      case 0: this.drawAxeHead_Nordic(g, p); break;
+      case 1: this.drawAxeHead_Hatchet(g, p); break;
+      case 2: this.drawAxeHead_Broad(g, p); break;
+      case 3: this.drawAxeHead_DoubleBit(g, p); break;
+      case 4: this.drawAxeHead_War(g, p); break;
+      default: this.drawAxeHead_Nordic(g, p);
+    }
 
     g.y = -84;
   }
@@ -1442,8 +1635,10 @@ export default class GameScene extends Phaser.Scene {
     this.hearts = [];
 
     const heartSpacing = 28;
+    const totalWidth = (this.maxLives - 1) * heartSpacing;
+    const startX = -totalWidth / 2; // Center the logs
     for (let i = 0; i < this.maxLives; i++) {
-      const heart = this.createHeart(i * heartSpacing, 0);
+      const heart = this.createHeart(startX + i * heartSpacing, 0);
       heart.setAlpha(i < this.lives ? 1 : 0.3);
       this.heartsContainer.add(heart);
       this.hearts.push(heart);
@@ -1451,31 +1646,33 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createHeart(x, y) {
-    const heart = this.add.graphics();
-    heart.setPosition(x, y);
-    const size = 10;
-    heart.fillStyle(0x000000);
-    heart.fillCircle(-size * 0.35, -size * 0.15, size * 0.5);
-    heart.fillCircle(size * 0.35, -size * 0.15, size * 0.5);
-    heart.beginPath();
-    heart.moveTo(-size * 0.75, -size * 0.1);
-    heart.lineTo(size * 0.75, -size * 0.1);
-    heart.lineTo(0, size * 0.85);
-    heart.closePath();
-    heart.fillPath();
-    const s = size * 0.75;
-    heart.fillStyle(0xe83050);
-    heart.fillCircle(-s * 0.35, -s * 0.15, s * 0.48);
-    heart.fillCircle(s * 0.35, -s * 0.15, s * 0.48);
-    heart.beginPath();
-    heart.moveTo(-s * 0.7, -s * 0.05);
-    heart.lineTo(s * 0.7, -s * 0.05);
-    heart.lineTo(0, s * 0.8);
-    heart.closePath();
-    heart.fillPath();
-    heart.fillStyle(0xffffff, 0.4);
-    heart.fillCircle(-size * 0.25, -size * 0.25, size * 0.18);
-    return heart;
+    // Log cross-section with tree rings
+    const g = this.add.graphics();
+    g.setPosition(x, y);
+
+    // Bark (outer ring)
+    g.fillStyle(0x4a3728);
+    g.fillCircle(0, 0, 10);
+
+    // Wood (inner)
+    g.fillStyle(0xc4a574);
+    g.fillCircle(0, 0, 8);
+
+    // Tree rings
+    g.lineStyle(1, 0xa08060, 0.6);
+    g.strokeCircle(0, 0, 6);
+    g.strokeCircle(0, 0, 4);
+    g.strokeCircle(0, 0, 2);
+
+    // Center dot
+    g.fillStyle(0x8b6914);
+    g.fillCircle(0, 0, 1.5);
+
+    // Highlight
+    g.fillStyle(0xffffff, 0.3);
+    g.fillCircle(-3, -3, 2);
+
+    return g;
   }
 
   loseLife() {
@@ -1573,6 +1770,8 @@ export default class GameScene extends Phaser.Scene {
     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
     this.soundEnabled = true;
     this.musicPlaying = false;
+    this.musicWasPlaying = false; // Track if music was playing before app went to background
+
     this.input.once('pointerdown', () => {
       if (this.audioContext.state === 'suspended') {
         this.audioContext.resume();
@@ -1581,6 +1780,35 @@ export default class GameScene extends Phaser.Scene {
         this.startBackgroundMusic();
       }
     });
+
+    // Handle app going to background (pause audio) and foreground (resume audio)
+    this.setupVisibilityHandling();
+  }
+
+  setupVisibilityHandling() {
+    // Store bound handler so we can remove it on scene shutdown if needed
+    this.visibilityHandler = () => {
+      if (document.hidden) {
+        // App went to background - pause all audio
+        this.musicWasPlaying = this.musicPlaying && this.bgMusic?.isPlaying;
+        if (this.bgMusic && this.bgMusic.isPlaying) {
+          this.bgMusic.pause();
+        }
+        if (this.audioContext && this.audioContext.state === 'running') {
+          this.audioContext.suspend();
+        }
+      } else {
+        // App came to foreground - resume audio if it was playing
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+          this.audioContext.resume();
+        }
+        if (this.musicWasPlaying && this.bgMusic) {
+          this.bgMusic.resume();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', this.visibilityHandler);
   }
 
   startBackgroundMusic() {
@@ -1833,10 +2061,11 @@ export default class GameScene extends Phaser.Scene {
   updateStreakDisplay() {
     this.streakText.setText('Streak: ' + this.streak);
     if (this.streak >= 5) {
-      this.streakFlame.start();
+      // Streak flame disabled for now (TODO: revisit effect)
+      // this.streakFlame.start();
       this.tweens.add({ targets: this.streakText, scale: { from: 1.1, to: 1 }, duration: 100, ease: 'Power1' });
     } else {
-      this.streakFlame.stop();
+      // this.streakFlame.stop();
     }
     if (this.streak >= 50) {
       this.streakText.setColor('#c090c0');
