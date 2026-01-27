@@ -25,3 +25,8 @@ backups/
 *.njsproj
 *.sln
 *.sw?
+
+# Release signing (NEVER commit these)
+*.keystore
+*.jks
+KEYSTORE_CREDENTIALS.txt
